@@ -2,7 +2,7 @@ package domain.combat;
 
 public class Warrior extends Player {
 
-    public Warrior(String name) {
-        super(name, 120, 25, 12);
+    public Warrior() {
+        super("Warrior", 260, 40, 20, 30);
     }
 }

@@ -1,18 +1,13 @@
 package domain.combat;
 
 public abstract class Player extends Combatant {
-    protected int skillCooldown;
-    protected int defendTurnsRemaining;
-    protected int bonusAttack;
+    private int skillCooldown;
+    private int defendTurnsLeft;
 
-    public Player(String name, int hp, int attack, int defense) {
-        this.name = name;
-        this.hp = hp;
-        this.attack = attack;
-        this.defense = defense;
+    public Player(String name, int maxHp, int attack, int defense, int speed) {
+        super(name, maxHp, attack, defense, speed);
         this.skillCooldown = 0;
-        this.defendTurnsRemaining = 0;
-        this.bonusAttack = 0;
+        this.defendTurnsLeft = 0;
     }
 
     public int getSkillCooldown() {
@@ -20,39 +15,42 @@ public abstract class Player extends Combatant {
     }
 
     public void setSkillCooldown(int skillCooldown) {
-        this.skillCooldown = skillCooldown;
+        this.skillCooldown = Math.max(0, skillCooldown);
     }
 
-    public void reduceCooldown() {
+    public void reduceSkillCooldown() {
         if (skillCooldown > 0) {
             skillCooldown--;
         }
     }
 
     public void activateDefend() {
-        defendTurnsRemaining = 2;
+        if (defendTurnsLeft == 0) {
+            defense += 10;
+        }
+        defendTurnsLeft = 2;
     }
 
     public void updateDefendStatus() {
-        if (defendTurnsRemaining > 0) {
-            defendTurnsRemaining--;
+        if (defendTurnsLeft > 0) {
+            defendTurnsLeft--;
+            if (defendTurnsLeft == 0) {
+                defense -= 10;
+            }
         }
     }
 
-    @Override
-    public int getDefense() {
-        if (defendTurnsRemaining > 0) {
-            return defense + 10;
-        }
-        return defense;
+    public boolean isDefending() {
+        return defendTurnsLeft > 0;
     }
 
-    @Override
-    public int getAttack() {
-        return attack + bonusAttack;
+    public int getDefendTurnsLeft() {
+        return defendTurnsLeft;
     }
 
     public void addBonusAttack(int amount) {
-        bonusAttack += amount;
+        if (amount > 0) {
+            attack += amount;
+        }
     }
 }

@@ -2,7 +2,11 @@ package domain.combat;
 
 public class Goblin extends Enemy {
 
+    public Goblin() {
+        super("Goblin", 55, 35, 15, 25);
+    }
+
     public Goblin(String name) {
-        super(name, 50, 15, 5);
+        super(name, 55, 35, 15, 25);
     }
 }

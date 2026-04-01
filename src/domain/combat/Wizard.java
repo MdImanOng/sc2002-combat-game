@@ -2,7 +2,7 @@ package domain.combat;
 
 public class Wizard extends Player {
 
-    public Wizard(String name) {
-        super(name, 90, 30, 8);
+    public Wizard() {
+        super("Wizard", 200, 50, 10, 20);
     }
 }

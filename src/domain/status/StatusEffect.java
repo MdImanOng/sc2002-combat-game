@@ -1,4 +1,10 @@
 package domain.status;
 
-public class StatusEffect {
+import domain.combat.Combatant;
+
+public interface StatusEffect {
+    void apply(Combatant target);
+    void onTurnStart(Combatant target);
+    boolean isExpired();
+    String getName();
 }

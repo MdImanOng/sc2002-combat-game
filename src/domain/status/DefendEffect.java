@@ -2,13 +2,14 @@ package domain.status;
 
 import domain.combat.Combatant;
 
-public class StunEffect implements StatusEffect {
+public class DefendEffect implements StatusEffect {
 
     private int duration = 2;
+    private int bonus = 10;
 
     @Override
     public void apply(Combatant target) {
-        target.setStunned(true);
+        target.increaseDefense(bonus);
     }
 
     @Override
@@ -16,7 +17,7 @@ public class StunEffect implements StatusEffect {
         duration--;
 
         if (duration <= 0) {
-            target.setStunned(false);
+            target.decreaseDefense(bonus);
         }
     }
 
@@ -27,7 +28,7 @@ public class StunEffect implements StatusEffect {
 
     @Override
     public String getName() {
-        return "Stun";
+        return "Defend";
     }
 }
 

@@ -2,13 +2,13 @@ package domain.status;
 
 import domain.combat.Combatant;
 
-public class StunEffect implements StatusEffect {
+public class SmokeBombEffect implements StatusEffect {
 
     private int duration = 2;
 
     @Override
     public void apply(Combatant target) {
-        target.setStunned(true);
+        target.setInvulnerable(true);
     }
 
     @Override
@@ -16,7 +16,7 @@ public class StunEffect implements StatusEffect {
         duration--;
 
         if (duration <= 0) {
-            target.setStunned(false);
+            target.setInvulnerable(false);
         }
     }
 
@@ -27,7 +27,7 @@ public class StunEffect implements StatusEffect {
 
     @Override
     public String getName() {
-        return "Stun";
+        return "Smoke Bomb Invulnerability";
     }
 }
 

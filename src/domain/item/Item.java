@@ -1,4 +1,9 @@
 package domain.item;
 
-public class Item {
+import domain.combat.Combatant;
+
+public interface Item {
+    void use(Combatant user, Combatant target);
+    String getName();
 }
+

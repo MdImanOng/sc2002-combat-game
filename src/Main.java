@@ -1,4 +1,4 @@
-package ui;
+
 
 import domain.action.BasicAttackAction;
 import domain.action.DefendAction;

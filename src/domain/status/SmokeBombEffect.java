@@ -2,21 +2,23 @@ package domain.status;
 
 import domain.combat.Combatant;
 
-public class SmokeBombEffect implements StatusEffect {
-    private int duration = 2;
+public class SmokeBombEffect extends StatusEffect {
+    public SmokeBombEffect() {
+        super(EffectType.SMOKE_INVULNERABLE, 2);
+    }
 
     @Override
     public void apply(Combatant target) {
+        // isInvulnerable() derived from active effects
+    }
+
+    @Override
+    public void remove(Combatant target) {
+        // nothing to undo
     }
 
     @Override
     public void onTurnStart(Combatant target) {
-        duration--;
+        tick();
     }
-
-    @Override
-    public boolean isExpired() { return duration <= 0; }
-
-    @Override
-    public String getName() { return "Smoke Bomb Invulnerability"; }
 }

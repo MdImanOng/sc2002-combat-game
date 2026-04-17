@@ -1,9 +1,9 @@
 package domain.action;
 
 import domain.combat.Combatant;
-import engine.BattleEngine;
+import engine.BattleContext;
 
 public interface Action {
-    String getName();
-    void execute(Combatant actor, Combatant target, BattleEngine engine);
+    void execute(Combatant actor, Combatant target, BattleContext ctx);
+    ActionType getType();
 }

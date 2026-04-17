@@ -1,20 +1,23 @@
 package domain.combat;
 
-import engine.BattleEngine;
+import domain.status.ArcaneBoostEffect;
+import engine.BattleContext;
 import java.util.List;
 
 public class Wizard extends Player {
+    private int arcaneBoost = 0;
+
     public Wizard(String name) {
         super(name, 200, 50, 10, 20);
     }
 
     @Override
-    public void executeSpecialSkill(Combatant target, BattleEngine engine) {
-        if (engine == null) {
-            System.out.println("No battle engine available.");
+    public void executeSpecialSkill(Combatant target, BattleContext ctx) {
+        if (ctx == null) {
+            System.out.println("No battle context available.");
             return;
         }
-        List<Enemy> enemies = engine.getAliveEnemies();
+        List<Enemy> enemies = ctx.getAliveEnemies();
         int kills = 0;
         for (Enemy e : enemies) {
             int damage = Math.max(0, getAttack() - e.getDefense());
@@ -24,8 +27,11 @@ public class Wizard extends Player {
             if (!e.isAlive()) kills++;
         }
         if (kills > 0) {
-            addBonusAttack(kills * 10);
-            System.out.println(getName() + " gains +" + (kills * 10) + " ATK from Arcane Blast kills!");
+            int boost = kills * 10;
+            arcaneBoost += boost;
+            applyEffect(new ArcaneBoostEffect(boost));
         }
     }
+
+    public int getArcaneBoost() { return arcaneBoost; }
 }

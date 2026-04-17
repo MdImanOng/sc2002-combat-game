@@ -2,23 +2,24 @@ package domain.action;
 
 import domain.combat.Combatant;
 import domain.combat.Player;
-import engine.BattleEngine;
+import domain.combat.SkillUser;
+import engine.BattleContext;
 
 public class SpecialSkillAction implements Action {
     @Override
-    public String getName() { return "Special Skill"; }
+    public ActionType getType() { return ActionType.SPECIAL_SKILL; }
 
     @Override
-    public void execute(Combatant actor, Combatant target, BattleEngine engine) {
-        if (!(actor instanceof Player p)) {
+    public void execute(Combatant actor, Combatant target, BattleContext ctx) {
+        if (!(actor instanceof SkillUser skillUser)) {
             System.out.println(actor.getName() + " cannot use a special skill.");
             return;
         }
-        if (p.getSkillCooldown() > 0) {
-            System.out.println("Skill on cooldown for " + p.getSkillCooldown() + " more turn(s).");
+        if (skillUser.getSkillCooldown() > 0) {
+            System.out.println("Skill on cooldown for " + skillUser.getSkillCooldown() + " more turn(s).");
             return;
         }
-        p.executeSpecialSkill(target, engine);
-        p.setSkillCooldown(3);
+        skillUser.executeSpecialSkill(target, ctx);
+        skillUser.setSkillCooldown(3);
     }
 }

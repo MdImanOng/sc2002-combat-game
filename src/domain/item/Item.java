@@ -1,9 +1,10 @@
 package domain.item;
 
 import domain.combat.Combatant;
-import engine.BattleEngine;
+import engine.BattleContext;
 
 public interface Item {
-    void use(Combatant user, Combatant target, BattleEngine engine);
+    void use(Combatant user, Combatant target, BattleContext ctx);
     String getName();
+    boolean isConsumed();
 }

@@ -2,22 +2,23 @@ package domain.status;
 
 import domain.combat.Combatant;
 
-public class StunEffect implements StatusEffect {
-    private int duration = 2;
+public class StunEffect extends StatusEffect {
+    public StunEffect() {
+        super(EffectType.STUN, 2);
+    }
 
     @Override
     public void apply(Combatant target) {
-        // isStunned() is now derived from active effects — no setter needed
+        // isStunned() derived from active effects
+    }
+
+    @Override
+    public void remove(Combatant target) {
+        // nothing to undo — isStunned() checks effects list
     }
 
     @Override
     public void onTurnStart(Combatant target) {
-        duration--;
+        tick();
     }
-
-    @Override
-    public boolean isExpired() { return duration <= 0; }
-
-    @Override
-    public String getName() { return "Stun"; }
 }

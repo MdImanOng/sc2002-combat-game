@@ -2,33 +2,26 @@ package domain.status;
 
 import domain.combat.Combatant;
 
-public class DefendEffect implements StatusEffect {
+public class DefendEffect extends StatusEffect {
+    private static final int BONUS = 10;
 
-    private int duration = 2;
-    private int bonus = 10;
+    public DefendEffect() {
+        super(EffectType.DEFEND_BUFF, 2);
+    }
 
     @Override
     public void apply(Combatant target) {
-        target.increaseDefense(bonus);
+        target.increaseDefense(BONUS);
+    }
+
+    @Override
+    public void remove(Combatant target) {
+        target.decreaseDefense(BONUS);
     }
 
     @Override
     public void onTurnStart(Combatant target) {
-        duration--;
-
-        if (duration <= 0) {
-            target.decreaseDefense(bonus);
-        }
-    }
-
-    @Override
-    public boolean isExpired() {
-        return duration <= 0;
-    }
-
-    @Override
-    public String getName() {
-        return "Defend";
+        tick();
+        if (isExpired()) remove(target);
     }
 }
-

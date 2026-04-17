@@ -1,14 +1,14 @@
 package domain.action;
 
 import domain.combat.Combatant;
-import engine.BattleEngine;
+import engine.BattleContext;
 
 public class BasicAttackAction implements Action {
     @Override
-    public String getName() { return "Basic Attack"; }
+    public ActionType getType() { return ActionType.BASIC_ATTACK; }
 
     @Override
-    public void execute(Combatant actor, Combatant target, BattleEngine engine) {
+    public void execute(Combatant actor, Combatant target, BattleContext ctx) {
         if (target == null || !target.isAlive()) {
             System.out.println("Invalid target.");
             return;

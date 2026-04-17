@@ -2,7 +2,7 @@ package domain.action;
 
 import domain.combat.Combatant;
 import domain.item.Item;
-import engine.BattleEngine;
+import engine.BattleContext;
 
 public class UseItemAction implements Action {
     private final Item item;
@@ -13,10 +13,10 @@ public class UseItemAction implements Action {
     }
 
     @Override
-    public String getName() { return "Use Item: " + item.getName(); }
+    public ActionType getType() { return ActionType.USE_ITEM; }
 
     @Override
-    public void execute(Combatant actor, Combatant target, BattleEngine engine) {
-        item.use(actor, target, engine);
+    public void execute(Combatant actor, Combatant target, BattleContext ctx) {
+        item.use(actor, target, ctx);
     }
 }

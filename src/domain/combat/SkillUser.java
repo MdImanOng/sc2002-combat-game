@@ -1,9 +1,9 @@
 package domain.combat;
 
-import engine.BattleEngine;
+import engine.BattleContext;
 
 public interface SkillUser {
-    void executeSpecialSkill(Combatant target, BattleEngine engine);
+    void executeSpecialSkill(Combatant target, BattleContext ctx);
     int getSkillCooldown();
     void setSkillCooldown(int val);
 }

@@ -4,26 +4,32 @@ import domain.action.*;
 import domain.combat.*;
 import domain.item.Item;
 import domain.level.Level;
+import ui.GameUI;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 
 public class BattleEngine {
     private final Player player;
     private final Level level;
     private final List<Enemy> activeEnemies;
     private final TurnOrderStrategy turnOrderStrategy;
-    private final Scanner scanner = new Scanner(System.in);
+    private final EnemyActionStrategy enemyActionStrategy;
+    private final GameUI ui;
     private int roundCount = 0;
 
-    public BattleEngine(Player player, Level level, TurnOrderStrategy strategy) {
+    public BattleEngine(Player player, Level level, TurnOrderStrategy turnOrderStrategy,
+                        EnemyActionStrategy enemyActionStrategy, GameUI ui) {
         if (player == null) throw new IllegalArgumentException("Player cannot be null.");
         if (level == null) throw new IllegalArgumentException("Level cannot be null.");
-        if (strategy == null) throw new IllegalArgumentException("TurnOrderStrategy cannot be null.");
+        if (turnOrderStrategy == null) throw new IllegalArgumentException("TurnOrderStrategy cannot be null.");
+        if (enemyActionStrategy == null) throw new IllegalArgumentException("EnemyActionStrategy cannot be null.");
+        if (ui == null) throw new IllegalArgumentException("GameUI cannot be null.");
         this.player = player;
         this.level = level;
         this.activeEnemies = new ArrayList<>(level.getInitialWave());
-        this.turnOrderStrategy = strategy;
+        this.turnOrderStrategy = turnOrderStrategy;
+        this.enemyActionStrategy = enemyActionStrategy;
+        this.ui = ui;
     }
 
     public List<Enemy> getAliveEnemies() {
@@ -34,23 +40,14 @@ public class BattleEngine {
 
     public void run() {
         try {
-            System.out.println("\n=== BATTLE START: " + level.getDifficulty() + " ===");
+            ui.printBattleStart(level.getDifficulty());
             while (true) {
                 roundCount++;
-                System.out.println("\n--- Round " + roundCount + " ---");
-
-                if (level.shouldSpawnBackup()) {
-                    List<Enemy> backup = level.spawnBackupWave();
-                    activeEnemies.addAll(backup);
-                    System.out.println(">>> BACKUP SPAWN! " + backup.size() + " enemies arrive!");
-                    for (Enemy e : backup) System.out.println("  + " + e);
-                }
+                ui.printRoundHeader(roundCount);
 
                 List<Combatant> allCombatants = new ArrayList<>();
                 allCombatants.add(player);
                 allCombatants.addAll(getAliveEnemies());
-
-                for (Combatant c : allCombatants) c.processEffects();
 
                 if (checkBattleEnd()) return;
 
@@ -58,42 +55,52 @@ public class BattleEngine {
 
                 for (Combatant current : turnOrder) {
                     if (!current.isAlive()) continue;
+
+                    // Process effects at this combatant's turn start
+                    current.processEffects();
+
+                    // Check battle end in case an effect caused elimination
+                    if (checkBattleEnd()) return;
+
                     if (current.isStunned()) {
-                        System.out.println(current.getName() + " is STUNNED — turn skipped.");
+                        ui.printStunned(current);
                         continue;
                     }
+
                     try {
                         if (current instanceof Player p) playerTurn(p);
                         else if (current instanceof Enemy e) enemyTurn(e);
                     } catch (IllegalArgumentException e) {
-                        System.out.println("Invalid action: " + e.getMessage() + " Please try again.");
+                        ui.printError("Invalid action: " + e.getMessage() + " Please try again.");
                     } catch (Exception e) {
-                        System.out.println("Unexpected error during " + current.getName() + "'s turn: " + e.getMessage());
+                        ui.printError("Unexpected error during " + current.getName() + "'s turn: " + e.getMessage());
                     }
+
                     if (checkBattleEnd()) return;
+
+                    // Check backup spawn immediately after any enemy is eliminated
+                    if (level.shouldSpawnBackup()) {
+                        List<Enemy> backup = level.spawnBackupWave();
+                        activeEnemies.addAll(backup);
+                        ui.printBackupSpawn(backup);
+                    }
                 }
 
-                player.reduceSkillCooldown();
-                displayRoundSummary();
+                ui.printRoundSummary(roundCount, player, activeEnemies);
             }
         } catch (Exception e) {
-            System.out.println("Critical battle error: " + e.getMessage());
+            ui.printError("Critical battle error: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
     private void playerTurn(Player p) {
-        System.out.println("\n" + p.getName() + "'s turn! HP: " + p.getHp() + "/" + p.getMaxHp()
-                + " | Cooldown: " + p.getSkillCooldown());
-        System.out.println("Enemies:");
+        ui.printPlayerStatus(p);
         List<Enemy> alive = getAliveEnemies();
-        for (int i = 0; i < alive.size(); i++)
-            System.out.println("  [" + (i + 1) + "] " + alive.get(i));
+        ui.printEnemyList(alive);
+        ui.printActions(!p.getInventory().isEmpty());
 
-        System.out.println("Actions: [1] Basic Attack  [2] Defend  [3] Special Skill"
-                + (p.getInventory().isEmpty() ? "" : "  [4] Use Item"));
-
-        int action = readInt(1, p.getInventory().isEmpty() ? 3 : 4);
+        int action = ui.readInt(1, p.getInventory().isEmpty() ? 3 : 4);
 
         switch (action) {
             case 1 -> {
@@ -105,70 +112,49 @@ public class BattleEngine {
                 Enemy target = selectEnemy(alive);
                 new SpecialSkillAction().execute(p, target, this);
             }
-            case 4 -> new UseItemAction().execute(p, selectEnemy(alive), this);
+            case 4 -> {
+                List<Item> inventory = p.getInventory();
+                ui.printItemList(inventory);
+                int itemChoice = ui.readInt(1, inventory.size());
+                Item chosen = inventory.get(itemChoice - 1);
+                Enemy itemTarget = selectEnemy(alive);
+                new UseItemAction(chosen).execute(p, itemTarget, this);
+                inventory.remove(itemChoice - 1);
+                ui.printItemUsed(chosen);
+            }
         }
+
+        // Cooldown only reduces if player actually took a turn
+        p.reduceSkillCooldown();
     }
 
     private void enemyTurn(Enemy e) {
         try {
-            System.out.println("\n" + e.getName() + "'s turn!");
+            ui.printTurnHeader(e);
             if (!player.isAlive()) return;
-            int damage = Math.max(0, e.getAttack() - player.getDefense());
-            player.takeDamage(damage);
+            enemyActionStrategy.execute(e, player, this);
         } catch (Exception ex) {
-            System.out.println("Error during " + e.getName() + "'s turn: " + ex.getMessage());
+            ui.printError("Error during " + e.getName() + "'s turn: " + ex.getMessage());
         }
     }
 
     private Enemy selectEnemy(List<Enemy> alive) {
         if (alive.isEmpty()) throw new IllegalStateException("No alive enemies to select.");
         if (alive.size() == 1) return alive.get(0);
-        System.out.print("Select target [1-" + alive.size() + "]: ");
-        int idx = readInt(1, alive.size());
+        ui.printSelectTarget(alive);
+        int idx = ui.readInt(1, alive.size());
         return alive.get(idx - 1);
-    }
-
-    private int readInt(int min, int max) {
-        int val = -1;
-        while (val < min || val > max) {
-            System.out.print("Choice [" + min + "-" + max + "]: ");
-            try {
-                String input = scanner.nextLine().trim();
-                if (input.isEmpty()) throw new IllegalArgumentException("Input cannot be empty.");
-                val = Integer.parseInt(input);
-                if (val < min || val > max)
-                    throw new IllegalArgumentException("Enter a number between " + min + " and " + max + ".");
-            } catch (IllegalArgumentException e) {
-                System.out.println("Invalid input: " + e.getMessage());
-                val = -1;
-            }
-        }
-        return val;
     }
 
     private boolean checkBattleEnd() {
         if (getAliveEnemies().isEmpty() && !level.shouldSpawnBackup()) {
-            System.out.println("\n=== VICTORY! All enemies defeated! ===");
-            System.out.println("Remaining HP: " + player.getHp() + "/" + player.getMaxHp());
-            System.out.println("Total Rounds: " + roundCount);
+            ui.printVictory(player, roundCount);
             return true;
         }
         if (!player.isAlive()) {
-            System.out.println("\n=== DEFEATED. Don't give up, try again! ===");
-            System.out.println("Total Rounds Survived: " + roundCount);
+            ui.printDefeat(roundCount, getAliveEnemies().size());
             return true;
         }
         return false;
-    }
-
-    private void displayRoundSummary() {
-        System.out.println("\n[End of Round " + roundCount + "]");
-        System.out.println("  " + player.getName() + " HP: " + player.getHp() + "/" + player.getMaxHp()
-                + " | Cooldown: " + player.getSkillCooldown()
-                + " | Items: " + player.getInventory().stream().map(Item::getName).toList());
-        for (Enemy e : activeEnemies)
-            System.out.println("  " + e.getName() + " HP: "
-                    + (e.isAlive() ? e.getHp() + "/" + e.getMaxHp() : "ELIMINATED")
-                    + (e.isStunned() ? " [STUNNED]" : ""));
     }
 }

@@ -1,53 +1,22 @@
 package domain.action;
 
 import domain.combat.Combatant;
-import domain.combat.Player;
 import domain.item.Item;
 import engine.BattleEngine;
-import java.util.List;
-import java.util.Scanner;
 
 public class UseItemAction implements Action {
-    private static final Scanner scanner = new Scanner(System.in);
+    private final Item item;
+
+    public UseItemAction(Item item) {
+        if (item == null) throw new IllegalArgumentException("Item cannot be null.");
+        this.item = item;
+    }
 
     @Override
-    public String getName() { return "Use Item"; }
+    public String getName() { return "Use Item: " + item.getName(); }
 
     @Override
     public void execute(Combatant actor, Combatant target, BattleEngine engine) {
-        if (!(actor instanceof Player p)) {
-            System.out.println(actor.getName() + " cannot use items.");
-            return;
-        }
-        List<Item> inventory = p.getInventory();
-        if (inventory.isEmpty()) {
-            System.out.println("No items left!");
-            return;
-        }
-        System.out.println("Choose an item:");
-        for (int i = 0; i < inventory.size(); i++)
-            System.out.println("  [" + (i + 1) + "] " + inventory.get(i).getName());
-
-        int choice = -1;
-        while (choice < 1 || choice > inventory.size()) {
-            System.out.print("Enter choice: ");
-            try {
-                choice = Integer.parseInt(scanner.nextLine().trim());
-                if (choice < 1 || choice > inventory.size())
-                    throw new IllegalArgumentException("Choose between 1 and " + inventory.size());
-            } catch (IllegalArgumentException e) {
-                System.out.println("Invalid input: " + e.getMessage());
-                choice = -1;
-            }
-        }
-
-        Item chosen = inventory.get(choice - 1);
-        try {
-            chosen.use(p, target, engine);
-            inventory.remove(choice - 1);
-            System.out.println(chosen.getName() + " used and removed from inventory.");
-        } catch (Exception e) {
-            System.out.println("Failed to use " + chosen.getName() + ": " + e.getMessage());
-        }
+        item.use(actor, target, engine);
     }
 }

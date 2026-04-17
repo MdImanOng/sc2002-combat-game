@@ -14,9 +14,12 @@ public class UseItemAction implements Action {
     public String getName() { return "Use Item"; }
 
     @Override
-    public void execute(Player actor, Combatant target, BattleEngine engine) {
-        if (actor == null) throw new IllegalArgumentException("Actor cannot be null.");
-        List<Item> inventory = actor.getInventory();
+    public void execute(Combatant actor, Combatant target, BattleEngine engine) {
+        if (!(actor instanceof Player p)) {
+            System.out.println(actor.getName() + " cannot use items.");
+            return;
+        }
+        List<Item> inventory = p.getInventory();
         if (inventory.isEmpty()) {
             System.out.println("No items left!");
             return;
@@ -40,7 +43,7 @@ public class UseItemAction implements Action {
 
         Item chosen = inventory.get(choice - 1);
         try {
-            chosen.use(actor, target, engine);
+            chosen.use(p, target, engine);
             inventory.remove(choice - 1);
             System.out.println(chosen.getName() + " used and removed from inventory.");
         } catch (Exception e) {

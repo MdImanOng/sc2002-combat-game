@@ -9,12 +9,16 @@ public class SpecialSkillAction implements Action {
     public String getName() { return "Special Skill"; }
 
     @Override
-    public void execute(Player actor, Combatant target, BattleEngine engine) {
-        if (actor.getSkillCooldown() > 0) {
-            System.out.println("Skill on cooldown for " + actor.getSkillCooldown() + " more turn(s).");
+    public void execute(Combatant actor, Combatant target, BattleEngine engine) {
+        if (!(actor instanceof Player p)) {
+            System.out.println(actor.getName() + " cannot use a special skill.");
             return;
         }
-        actor.executeSpecialSkill(target, engine);
-        actor.setSkillCooldown(3);
+        if (p.getSkillCooldown() > 0) {
+            System.out.println("Skill on cooldown for " + p.getSkillCooldown() + " more turn(s).");
+            return;
+        }
+        p.executeSpecialSkill(target, engine);
+        p.setSkillCooldown(3);
     }
 }

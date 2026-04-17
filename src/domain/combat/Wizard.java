@@ -1,6 +1,5 @@
 package domain.combat;
 
-import domain.status.StunEffect;
 import engine.BattleEngine;
 import java.util.List;
 
@@ -28,11 +27,5 @@ public class Wizard extends Player {
             addBonusAttack(kills * 10);
             System.out.println(getName() + " gains +" + (kills * 10) + " ATK from Arcane Blast kills!");
         }
-    }
-
-    @Override
-    public void useSpecialSkillWithoutCooldown() {
-        // PowerStone triggers this — engine context handled by PowerStone
-        System.out.println(getName() + " triggers Arcane Blast via Power Stone.");
     }
 }

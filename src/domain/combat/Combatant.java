@@ -12,8 +12,6 @@ public abstract class Combatant {
     protected int attack;
     protected int defense;
     protected int speed;
-    private boolean stunned = false;
-    private boolean invulnerable = false;
     private List<StatusEffect> effects = new ArrayList<>();
 
     public Combatant(String name, int maxHp, int attack, int defense, int speed) {
@@ -36,9 +34,21 @@ public abstract class Combatant {
 
     public boolean isAlive() { return hp > 0; }
 
+    public boolean isStunned() {
+        for (StatusEffect e : effects)
+            if (e.getName().equals("Stun")) return true;
+        return false;
+    }
+
+    public boolean isInvulnerable() {
+        for (StatusEffect e : effects)
+            if (e.getName().equals("Smoke Bomb Invulnerability")) return true;
+        return false;
+    }
+
     public void takeDamage(int damage) {
         if (damage < 0) throw new IllegalArgumentException("Damage cannot be negative.");
-        if (invulnerable) {
+        if (isInvulnerable()) {
             System.out.println(name + " is invulnerable! No damage taken.");
             return;
         }
@@ -76,11 +86,6 @@ public abstract class Combatant {
         }
     }
 
-    public boolean isStunned() { return stunned; }
-    public void setStunned(boolean val) { stunned = val; }
-    public boolean isInvulnerable() { return invulnerable; }
-    public void setInvulnerable(boolean val) { invulnerable = val; }
-
     @Override
     public String toString() {
         return name + " | HP: " + hp + "/" + maxHp
@@ -88,6 +93,4 @@ public abstract class Combatant {
                 + " | DEF: " + defense
                 + " | SPD: " + speed;
     }
-
-    public abstract void useSpecialSkillWithoutCooldown();
 }

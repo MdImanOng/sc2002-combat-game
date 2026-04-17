@@ -5,7 +5,7 @@ import engine.BattleEngine;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class Player extends Combatant {
+public abstract class Player extends Combatant implements SkillUser {
     private int skillCooldown;
     private List<Item> inventory = new ArrayList<>();
 
@@ -14,8 +14,10 @@ public abstract class Player extends Combatant {
         this.skillCooldown = 0;
     }
 
+    @Override
     public int getSkillCooldown() { return skillCooldown; }
 
+    @Override
     public void setSkillCooldown(int val) { this.skillCooldown = Math.max(0, val); }
 
     public void reduceSkillCooldown() {
@@ -30,10 +32,6 @@ public abstract class Player extends Combatant {
 
     public void addItem(Item item) { inventory.add(item); }
 
-    public abstract void executeSpecialSkill(Combatant target, BattleEngine engine);
-
     @Override
-    public void useSpecialSkillWithoutCooldown() {
-        // Default no-op; overridden in Warrior/Wizard if needed
-    }
+    public abstract void executeSpecialSkill(Combatant target, BattleEngine engine);
 }

@@ -3,31 +3,21 @@ package domain.status;
 import domain.combat.Combatant;
 
 public class StunEffect implements StatusEffect {
-
     private int duration = 2;
 
     @Override
     public void apply(Combatant target) {
-        target.setStunned(true);
+        // isStunned() is now derived from active effects — no setter needed
     }
 
     @Override
     public void onTurnStart(Combatant target) {
         duration--;
-
-        if (duration <= 0) {
-            target.setStunned(false);
-        }
     }
 
     @Override
-    public boolean isExpired() {
-        return duration <= 0;
-    }
+    public boolean isExpired() { return duration <= 0; }
 
     @Override
-    public String getName() {
-        return "Stun";
-    }
+    public String getName() { return "Stun"; }
 }
-

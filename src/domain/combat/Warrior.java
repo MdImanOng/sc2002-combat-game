@@ -20,10 +20,4 @@ public class Warrior extends Player {
         System.out.println(getName() + " uses Shield Bash on " + target.getName()
                 + " for " + damage + " damage! " + target.getName() + " is STUNNED.");
     }
-
-    @Override
-    public void useSpecialSkillWithoutCooldown() {
-        // Called by PowerStone — but needs target/engine, so PowerStone handles Warrior differently
-        System.out.println(getName() + " triggers Shield Bash via Power Stone (select target in engine).");
-    }
 }

@@ -9,23 +9,26 @@ import domain.level.Level;
 import domain.level.LevelFactory;
 import engine.BattleEngine;
 import engine.SpeedBasedTurnOrder;
-
 import java.util.Scanner;
 
 public class Main {
     private static final Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
-        printLoadingScreen();
-
-        Player player = selectPlayer();
-        selectItems(player);
-        Level level = selectLevel();
-
-        BattleEngine engine = new BattleEngine(player, level, new SpeedBasedTurnOrder());
-        engine.run();
-
-        askReplay(player, level);
+        try {
+            printLoadingScreen();
+            Player player = selectPlayer();
+            selectItems(player);
+            Level level = selectLevel();
+            BattleEngine engine = new BattleEngine(player, level, new SpeedBasedTurnOrder());
+            engine.run();
+            askReplay(player, level);
+        } catch (IllegalArgumentException e) {
+            System.out.println("Setup error: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("Unexpected error: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private static void printLoadingScreen() {
@@ -62,7 +65,7 @@ public class Main {
 
     private static void selectItems(Player player) {
         System.out.println("\nSelect 2 items (duplicates allowed):");
-        System.out.println("  [1] Potion     — Heal 100 HP");
+        System.out.println("  [1] Potion      — Heal 100 HP");
         System.out.println("  [2] Power Stone — Trigger special skill once, no cooldown change");
         System.out.println("  [3] Smoke Bomb  — Invulnerable to enemy attacks for 2 turns");
         for (int i = 1; i <= 2; i++) {
@@ -80,7 +83,7 @@ public class Main {
             case 1 -> new Potion();
             case 2 -> new PowerStone();
             case 3 -> new SmokeBomb();
-            default -> new Potion();
+            default -> throw new IllegalArgumentException("Invalid item choice: " + choice);
         };
     }
 
@@ -94,9 +97,10 @@ public class Main {
             case 1 -> "easy";
             case 2 -> "medium";
             case 3 -> "hard";
-            default -> "easy";
+            default -> throw new IllegalArgumentException("Invalid difficulty choice: " + choice);
         };
-        System.out.println("Difficulty selected: " + difficulty.substring(0, 1).toUpperCase() + difficulty.substring(1));
+        System.out.println("Difficulty selected: " + difficulty.substring(0, 1).toUpperCase()
+                + difficulty.substring(1));
         return LevelFactory.createLevel(difficulty);
     }
 
@@ -107,19 +111,22 @@ public class Main {
         System.out.println("  [3] Exit");
         System.out.println("============================================");
         int choice = readInt(1, 3);
-        switch (choice) {
-            case 1 -> {
-                // Rebuild same player type and level
-                Player same = (originalPlayer instanceof Warrior)
-                        ? new Warrior(originalPlayer.getName())
-                        : new Wizard(originalPlayer.getName());
-                originalPlayer.getInventory().forEach(item -> same.addItem(createItemByName(item.getName())));
-                Level sameLevel = LevelFactory.createLevel(originalLevel.getDifficulty().toLowerCase());
-                new BattleEngine(same, sameLevel, new SpeedBasedTurnOrder()).run();
-                askReplay(same, sameLevel);
+        try {
+            switch (choice) {
+                case 1 -> {
+                    Player same = (originalPlayer instanceof Warrior)
+                            ? new Warrior(originalPlayer.getName())
+                            : new Wizard(originalPlayer.getName());
+                    originalPlayer.getInventory().forEach(item -> same.addItem(createItemByName(item.getName())));
+                    Level sameLevel = LevelFactory.createLevel(originalLevel.getDifficulty().toLowerCase());
+                    new BattleEngine(same, sameLevel, new SpeedBasedTurnOrder()).run();
+                    askReplay(same, sameLevel);
+                }
+                case 2 -> main(new String[]{});
+                case 3 -> System.out.println("Thanks for playing!");
             }
-            case 2 -> main(new String[]{});
-            case 3 -> System.out.println("Thanks for playing!");
+        } catch (Exception e) {
+            System.out.println("Error during replay: " + e.getMessage());
         }
     }
 
@@ -128,7 +135,7 @@ public class Main {
             case "Potion" -> new Potion();
             case "Power Stone" -> new PowerStone();
             case "Smoke Bomb" -> new SmokeBomb();
-            default -> new Potion();
+            default -> throw new IllegalArgumentException("Unknown item: " + name);
         };
     }
 
@@ -136,8 +143,16 @@ public class Main {
         int val = -1;
         while (val < min || val > max) {
             System.out.print("Choice [" + min + "-" + max + "]: ");
-            try { val = Integer.parseInt(scanner.nextLine().trim()); }
-            catch (NumberFormatException e) { val = -1; }
+            try {
+                String input = scanner.nextLine().trim();
+                if (input.isEmpty()) throw new IllegalArgumentException("Input cannot be empty.");
+                val = Integer.parseInt(input);
+                if (val < min || val > max)
+                    throw new IllegalArgumentException("Enter a number between " + min + " and " + max + ".");
+            } catch (IllegalArgumentException e) {
+                System.out.println("Invalid input: " + e.getMessage());
+                val = -1;
+            }
         }
         return val;
     }

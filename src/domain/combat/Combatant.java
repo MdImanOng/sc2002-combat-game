@@ -1,22 +1,24 @@
 package domain.combat;
 
-import java.util.*;
 import domain.status.StatusEffect;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 public abstract class Combatant {
-
     protected String name;
     protected int hp;
     protected int maxHp;
     protected int attack;
     protected int defense;
     protected int speed;
-
     private boolean stunned = false;
     private boolean invulnerable = false;
     private List<StatusEffect> effects = new ArrayList<>();
 
     public Combatant(String name, int maxHp, int attack, int defense, int speed) {
+        if (name == null || name.isBlank()) throw new IllegalArgumentException("Name cannot be empty.");
+        if (maxHp <= 0) throw new IllegalArgumentException("Max HP must be positive.");
         this.name = name;
         this.maxHp = maxHp;
         this.hp = maxHp;
@@ -32,22 +34,23 @@ public abstract class Combatant {
     public int getDefense() { return defense; }
     public int getSpeed() { return speed; }
 
-    public boolean isAlive() {
-        return hp > 0;
-    }
+    public boolean isAlive() { return hp > 0; }
 
     public void takeDamage(int damage) {
-    if (invulnerable) {
-        System.out.println(name + " is invulnerable! No damage taken.");
-        return;
+        if (damage < 0) throw new IllegalArgumentException("Damage cannot be negative.");
+        if (invulnerable) {
+            System.out.println(name + " is invulnerable! No damage taken.");
+            return;
+        }
+        int actual = Math.max(0, damage);
+        hp = Math.max(0, hp - actual);
+        System.out.println(name + " takes " + actual + " damage. HP: " + hp + "/" + maxHp);
     }
-    int actual = Math.max(0, damage);
-    hp = Math.max(0, hp - actual);
-    System.out.println(name + " takes " + actual + " damage. HP: " + hp + "/" + maxHp);
-}
 
     public void heal(int amount) {
-        hp = Math.min(maxHp, hp + Math.max(0, amount));
+        if (amount < 0) throw new IllegalArgumentException("Heal amount cannot be negative.");
+        hp = Math.min(maxHp, hp + amount);
+        System.out.println(name + " healed to " + hp + "/" + maxHp);
     }
 
     public void increaseDefense(int amount) {
@@ -58,28 +61,23 @@ public abstract class Combatant {
         if (amount > 0) defense = Math.max(0, defense - amount);
     }
 
-    // ===== STATUS EFFECT SYSTEM =====
     public void addStatusEffect(StatusEffect effect) {
+        if (effect == null) throw new IllegalArgumentException("Status effect cannot be null.");
         effects.add(effect);
         effect.apply(this);
     }
 
     public void processEffects() {
         Iterator<StatusEffect> it = effects.iterator();
-
         while (it.hasNext()) {
             StatusEffect e = it.next();
             e.onTurnStart(this);
-
-            if (e.isExpired()) {
-                it.remove();
-            }
+            if (e.isExpired()) it.remove();
         }
     }
 
     public boolean isStunned() { return stunned; }
     public void setStunned(boolean val) { stunned = val; }
-
     public boolean isInvulnerable() { return invulnerable; }
     public void setInvulnerable(boolean val) { invulnerable = val; }
 
@@ -91,7 +89,5 @@ public abstract class Combatant {
                 + " | SPD: " + speed;
     }
 
-    // REQUIRED for PowerStone
     public abstract void useSpecialSkillWithoutCooldown();
 }
-

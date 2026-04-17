@@ -1,35 +1,144 @@
-
-
-import domain.action.BasicAttackAction;
-import domain.action.DefendAction;
-import domain.action.SpecialSkillAction;
-import domain.combat.Goblin;
 import domain.combat.Player;
 import domain.combat.Warrior;
 import domain.combat.Wizard;
+import domain.item.Item;
+import domain.item.Potion;
+import domain.item.PowerStone;
+import domain.item.SmokeBomb;
 import domain.level.Level;
 import domain.level.LevelFactory;
 import engine.BattleEngine;
+import engine.SpeedBasedTurnOrder;
+
+import java.util.Scanner;
 
 public class Main {
-  public static void main(String[] args) {
-    Player warrior = new Warrior("Kai");
-    Goblin goblin = new Goblin("Goblin_1");
+    private static final Scanner scanner = new Scanner(System.in);
 
-    BasicAttackAction basicAttack = new BasicAttackAction();
-    DefendAction defend = new DefendAction();
+    public static void main(String[] args) {
+        printLoadingScreen();
 
-    basicAttack.execute(warrior, goblin, null);
-    defend.execute(warrior, null, null);
+        Player player = selectPlayer();
+        selectItems(player);
+        Level level = selectLevel();
 
-    Level medium = LevelFactory.createLevel("medium");
-    System.out.println("Loaded level: " + medium.getDifficulty());
-    System.out.println("Initial enemies: " + medium.getInitialWave().size());
+        BattleEngine engine = new BattleEngine(player, level, new SpeedBasedTurnOrder());
+        engine.run();
 
-    Player wizard = new Wizard("Ezra");
-    BattleEngine engine = new BattleEngine(medium.getInitialWave());
+        askReplay(player, level);
+    }
 
-    SpecialSkillAction specialSkill = new SpecialSkillAction();
-    specialSkill.execute(wizard, null, engine);
-  }
+    private static void printLoadingScreen() {
+        System.out.println("============================================");
+        System.out.println("       TURN-BASED COMBAT ARENA");
+        System.out.println("============================================");
+        System.out.println("\nAvailable Players:");
+        System.out.println("  [1] Warrior  | HP: 260 | ATK: 40 | DEF: 20 | SPD: 30");
+        System.out.println("               | Skill: Shield Bash — deals damage + stuns target for 2 turns");
+        System.out.println("  [2] Wizard   | HP: 200 | ATK: 50 | DEF: 10 | SPD: 20");
+        System.out.println("               | Skill: Arcane Blast — hits all enemies, +10 ATK per kill");
+        System.out.println("\nAvailable Enemies:");
+        System.out.println("  Goblin | HP: 55  | ATK: 35 | DEF: 15 | SPD: 25");
+        System.out.println("  Wolf   | HP: 40  | ATK: 45 | DEF: 5  | SPD: 35");
+        System.out.println("\nDifficulty Levels:");
+        System.out.println("  [1] Easy   — 3 Goblins");
+        System.out.println("  [2] Medium — 1 Goblin + 1 Wolf | Backup: 2 Wolves");
+        System.out.println("  [3] Hard   — 2 Goblins          | Backup: 1 Goblin + 2 Wolves");
+        System.out.println("============================================\n");
+    }
+
+    private static Player selectPlayer() {
+        System.out.println("Select your player:");
+        System.out.println("  [1] Warrior");
+        System.out.println("  [2] Wizard");
+        int choice = readInt(1, 2);
+        System.out.print("Enter your name: ");
+        String name = scanner.nextLine().trim();
+        if (name.isEmpty()) name = (choice == 1) ? "Warrior" : "Wizard";
+        Player player = (choice == 1) ? new Warrior(name) : new Wizard(name);
+        System.out.println("You selected: " + player);
+        return player;
+    }
+
+    private static void selectItems(Player player) {
+        System.out.println("\nSelect 2 items (duplicates allowed):");
+        System.out.println("  [1] Potion     — Heal 100 HP");
+        System.out.println("  [2] Power Stone — Trigger special skill once, no cooldown change");
+        System.out.println("  [3] Smoke Bomb  — Invulnerable to enemy attacks for 2 turns");
+        for (int i = 1; i <= 2; i++) {
+            System.out.println("Item " + i + ":");
+            int choice = readInt(1, 3);
+            player.addItem(createItem(choice));
+        }
+        System.out.print("Items selected: ");
+        player.getInventory().forEach(item -> System.out.print(item.getName() + " "));
+        System.out.println();
+    }
+
+    private static Item createItem(int choice) {
+        return switch (choice) {
+            case 1 -> new Potion();
+            case 2 -> new PowerStone();
+            case 3 -> new SmokeBomb();
+            default -> new Potion();
+        };
+    }
+
+    private static Level selectLevel() {
+        System.out.println("\nSelect difficulty:");
+        System.out.println("  [1] Easy");
+        System.out.println("  [2] Medium");
+        System.out.println("  [3] Hard");
+        int choice = readInt(1, 3);
+        String difficulty = switch (choice) {
+            case 1 -> "easy";
+            case 2 -> "medium";
+            case 3 -> "hard";
+            default -> "easy";
+        };
+        System.out.println("Difficulty selected: " + difficulty.substring(0, 1).toUpperCase() + difficulty.substring(1));
+        return LevelFactory.createLevel(difficulty);
+    }
+
+    private static void askReplay(Player originalPlayer, Level originalLevel) {
+        System.out.println("\n============================================");
+        System.out.println("  [1] Replay with same settings");
+        System.out.println("  [2] Start a new game");
+        System.out.println("  [3] Exit");
+        System.out.println("============================================");
+        int choice = readInt(1, 3);
+        switch (choice) {
+            case 1 -> {
+                // Rebuild same player type and level
+                Player same = (originalPlayer instanceof Warrior)
+                        ? new Warrior(originalPlayer.getName())
+                        : new Wizard(originalPlayer.getName());
+                originalPlayer.getInventory().forEach(item -> same.addItem(createItemByName(item.getName())));
+                Level sameLevel = LevelFactory.createLevel(originalLevel.getDifficulty().toLowerCase());
+                new BattleEngine(same, sameLevel, new SpeedBasedTurnOrder()).run();
+                askReplay(same, sameLevel);
+            }
+            case 2 -> main(new String[]{});
+            case 3 -> System.out.println("Thanks for playing!");
+        }
+    }
+
+    private static Item createItemByName(String name) {
+        return switch (name) {
+            case "Potion" -> new Potion();
+            case "Power Stone" -> new PowerStone();
+            case "Smoke Bomb" -> new SmokeBomb();
+            default -> new Potion();
+        };
+    }
+
+    private static int readInt(int min, int max) {
+        int val = -1;
+        while (val < min || val > max) {
+            System.out.print("Choice [" + min + "-" + max + "]: ");
+            try { val = Integer.parseInt(scanner.nextLine().trim()); }
+            catch (NumberFormatException e) { val = -1; }
+        }
+        return val;
+    }
 }

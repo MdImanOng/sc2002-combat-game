@@ -2,18 +2,16 @@ package domain.action;
 
 import domain.combat.Combatant;
 import domain.combat.Player;
+import domain.status.DefendEffect;
 import engine.BattleEngine;
 
 public class DefendAction implements Action {
-
     @Override
-    public String getName() {
-        return "Defend";
-    }
+    public String getName() { return "Defend"; }
 
     @Override
     public void execute(Player actor, Combatant target, BattleEngine engine) {
-        actor.activateDefend();
-        System.out.println(actor.getName() + " uses Defend and gains +10 defense for 2 turns.");
+        actor.addStatusEffect(new DefendEffect());
+        System.out.println(actor.getName() + " takes a defensive stance! +10 DEF for 2 turns.");
     }
 }

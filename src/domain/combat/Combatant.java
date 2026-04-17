@@ -36,18 +36,15 @@ public abstract class Combatant {
         return hp > 0;
     }
 
-    // 🔥 UPDATED DAMAGE LOGIC
     public void takeDamage(int damage) {
-        if (invulnerable) {
-            System.out.println(name + " is invulnerable!");
-            return;
-        }
-
-        int actualDamage = Math.max(0, damage - defense);
-        hp = Math.max(0, hp - actualDamage);
-
-        System.out.println(name + " takes " + actualDamage + " damage.");
+    if (invulnerable) {
+        System.out.println(name + " is invulnerable! No damage taken.");
+        return;
     }
+    int actual = Math.max(0, damage);
+    hp = Math.max(0, hp - actual);
+    System.out.println(name + " takes " + actual + " damage. HP: " + hp + "/" + maxHp);
+}
 
     public void heal(int amount) {
         hp = Math.min(maxHp, hp + Math.max(0, amount));

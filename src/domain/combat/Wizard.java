@@ -18,18 +18,16 @@ public class Wizard extends Player {
             return;
         }
         List<Enemy> enemies = ctx.getAliveEnemies();
-        int kills = 0;
         for (Enemy e : enemies) {
             int damage = Math.max(0, getAttack() - e.getDefense());
             e.takeDamage(damage);
             System.out.println(getName() + " hits " + e.getName()
                     + " with Arcane Blast for " + damage + " damage.");
-            if (!e.isAlive()) kills++;
-        }
-        if (kills > 0) {
-            int boost = kills * 10;
-            arcaneBoost += boost;
-            applyEffect(new ArcaneBoostEffect(boost));
+            if (!e.isAlive()) {
+                arcaneBoost += 10;
+                applyEffect(new ArcaneBoostEffect(10)); // ArcaneBoostEffect.apply() calls increaseAttack(10)
+                System.out.println(getName() + " gains +10 ATK from kill! ATK now: " + getAttack());
+            }
         }
     }
 

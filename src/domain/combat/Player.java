@@ -46,6 +46,11 @@ public abstract class Player extends Combatant implements SkillUser {
 
     @Override
     public void performAction(BattleContext ctx) {
+        // Decrement cooldown at START of turn before action choice.
+        // Matches spec: "cooldown 3 turns including current round"
+        // meaning set=3 on use turn, tick each subsequent turn start.
+        reduceSkillCooldown();
+
         ActionType actionType = chooseAction(ctx.getUI());
         List<Enemy> alive = ctx.getAliveEnemies();
 
@@ -66,6 +71,5 @@ public abstract class Player extends Combatant implements SkillUser {
                 useItem(idx, target, ctx);
             }
         }
-        reduceSkillCooldown();
     }
 }

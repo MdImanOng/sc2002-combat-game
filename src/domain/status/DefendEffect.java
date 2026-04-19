@@ -21,7 +21,6 @@ public class DefendEffect extends StatusEffect {
 
     @Override
     public void onTurnStart(Combatant target) {
-        tick();
-        if (isExpired()) remove(target);
+        tick(); // tickEffects() in Combatant handles removal when expired
     }
 }

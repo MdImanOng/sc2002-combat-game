@@ -1,6 +1,5 @@
 package domain.combat;
 
-import domain.status.ArcaneBoostEffect;
 import domain.status.StunEffect;
 import engine.BattleContext;
 

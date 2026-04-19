@@ -3,22 +3,19 @@ package domain.status;
 import domain.combat.Combatant;
 
 public class StunEffect extends StatusEffect {
+
     public StunEffect() {
         super(EffectType.STUN, 2);
     }
 
     @Override
-    public void apply(Combatant target) {
-        // isStunned() derived from active effects
-    }
+    public void apply(Combatant target) {}
 
     @Override
-    public void remove(Combatant target) {
-        // nothing to undo — isStunned() checks effects list
-    }
+    public void remove(Combatant target) {}
 
     @Override
     public void onTurnStart(Combatant target) {
-        tick();
+        tick(); // tickEffects() in Combatant handles removal when expired
     }
 }

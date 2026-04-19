@@ -1,5 +1,6 @@
 package domain.combat;
 
+import domain.status.EffectType;
 import domain.status.StatusEffect;
 import engine.BattleContext;
 import java.util.ArrayList;
@@ -32,18 +33,17 @@ public abstract class Combatant {
     public int getAttack() { return attack; }
     public int getDefense() { return defense; }
     public int getSpeed() { return speed; }
-
     public boolean isAlive() { return hp > 0; }
 
     public boolean isStunned() {
         for (StatusEffect e : activeEffects)
-            if (e.getType().name().equals("STUN")) return true;
+            if (e.getType() == EffectType.STUN) return true;  // enum comparison, not string
         return false;
     }
 
     public boolean isInvulnerable() {
         for (StatusEffect e : activeEffects)
-            if (e.getType().name().equals("SMOKE_INVULNERABLE")) return true;
+            if (e.getType() == EffectType.SMOKE_INVULNERABLE) return true;  // enum comparison
         return false;
     }
 
@@ -86,10 +86,8 @@ public abstract class Combatant {
         }
     }
 
-    // kept for compatibility
     public void addStatusEffect(StatusEffect effect) { applyEffect(effect); }
     public void processEffects() { tickEffects(); }
-
     public List<StatusEffect> getActiveEffects() { return activeEffects; }
 
     public abstract void performAction(BattleContext ctx);

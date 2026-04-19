@@ -51,9 +51,7 @@ public class BattleEngine {
         List<Combatant> allCombatants = new ArrayList<>();
         allCombatants.add(player);
         allCombatants.addAll(getAliveEnemies());
-
         List<Combatant> turnOrder = getTurnOrder(allCombatants);
-
         for (Combatant current : turnOrder) {
             if (!current.isAlive()) continue;
             processTurn(current);
@@ -63,23 +61,25 @@ public class BattleEngine {
     }
 
     public void processTurn(Combatant current) {
-        current.tickEffects();
-        if (checkEndCondition()) return;
-
+        // Check stun BEFORE ticking effects.
+        // Stun blocks the full turn, THEN ticks down at end of that blocked turn.
+        // This matches appendix: stunned entity skips turn, stun expires after blocking.
         if (current.isStunned()) {
             ui.displayStunned(current);
+            current.tickEffects(); // tick stun duration AFTER blocking the turn
             return;
         }
 
-        ui.displayTurnHeader(current);
+        current.tickEffects(); // tick non-stun effects at start of normal turn
+        if (checkEndCondition()) return;
 
+        ui.displayTurnHeader(current);
         if (current instanceof Player p) ui.displayPlayerStatus(p);
         if (current instanceof Enemy) ui.displayEnemyList(getAliveEnemies());
 
         BattleContext ctx = new BattleContext(
                 new ArrayList<>(activeEnemies),
                 player, activeEnemies, currentRound, ui);
-
         try {
             current.performAction(ctx);
         } catch (IllegalArgumentException e) {

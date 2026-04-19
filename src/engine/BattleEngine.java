@@ -38,7 +38,17 @@ public class BattleEngine {
                 currentRound++;
                 ui.displayRoundHeader(currentRound);
                 processRound();
-                if (checkEndCondition()) return;
+
+                if (getAliveEnemies().isEmpty() && !level.shouldSpawnBackup()) {
+                    ui.displayVictory(player, currentRound);
+                    return;
+                }
+
+                if (!player.isAlive()) {
+                    ui.displayDefeat(currentRound, getAliveEnemies().size());
+                    return;
+                }
+
                 ui.displayRoundSummary(currentRound, player, activeEnemies);
             }
         } catch (Exception e) {
@@ -91,11 +101,9 @@ public class BattleEngine {
 
     public boolean checkEndCondition() {
         if (getAliveEnemies().isEmpty() && !level.shouldSpawnBackup()) {
-            ui.displayVictory(player, currentRound);
             return true;
         }
         if (!player.isAlive()) {
-            ui.displayDefeat(currentRound, getAliveEnemies().size());
             return true;
         }
         return false;
